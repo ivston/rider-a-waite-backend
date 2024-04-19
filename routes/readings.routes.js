@@ -75,4 +75,36 @@ router.post("/:readingId", isAuthenticated, async (req, res, next) => {
   }
 });
 
+// DELETE /api/readings/:readingId/notes
+// Delete the content of the notes associated with a reading by its reading ID
+router.delete("/:readingId/notes", isAuthenticated, async (req, res, next) => {
+  try {
+    const { readingId } = req.params;
+
+    // Find the reading by ID
+    const reading = await Reading.findById(readingId);
+
+    if (!reading) {
+      return res.status(404).json({ message: "Reading not found" });
+    }
+
+    // Check if notes exist for the reading
+    if (!reading.notes) {
+      return res
+        .status(404)
+        .json({ message: "No notes found for the reading" });
+    }
+
+    // Delete the content of the notes associated with the reading
+    reading.notes = "";
+
+    // Save the updated reading
+    await reading.save();
+
+    res.json({ message: "Note content deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

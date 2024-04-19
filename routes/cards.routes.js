@@ -10,6 +10,7 @@ router.get("/", async (req, res, next) => {
     const projections = {
       name: 1,
       description: 1,
+      image: 1,
     };
 
     const allCards = await Card.find(search, projections);

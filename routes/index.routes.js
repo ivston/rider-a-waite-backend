@@ -3,7 +3,7 @@ const User = require("./../models/User.model.js");
 const isAuthenticated = require("../middlewares/isAuthenticated.js");
 //! We are prefixed with => /api
 
-router.get("/health", (req, res, next) => {
+router.get("/", (req, res, next) => {
   res.json("All good in here");
 });
 
