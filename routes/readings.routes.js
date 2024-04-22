@@ -1,24 +1,71 @@
 const router = require("express").Router();
+const Card = require("./../models/Card.model.js");
 const Reading = require("./../models/Reading.model.js");
 const isAuthenticated = require("../middlewares/isAuthenticated.js");
 
-// POST /api/readings
-// Create a new reading
-router.post("/", isAuthenticated, async (req, res, next) => {
+// POST /api/readings/:spreadType
+// Generate a new reading based on the selected spread type
+router.post("/:spreadType", isAuthenticated, async (req, res, next) => {
   try {
-    const { spreadType, cardsInOrder, aiInterpretation, notes } = req.body;
-    const querentId = req.currentUserId; // The logged-in user's ID
+    const { spreadType } = req.params;
+    let numCards;
+    switch (spreadType) {
+      case "one-card":
+        numCards = 1;
+        break;
+      case "three-card":
+        numCards = 3;
+        break;
+      case "celtic-cross":
+        numCards = 10;
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid spread type" });
+    }
 
-    // Create the reading
-    const newReading = await Reading.create({
-      querentId,
+    // Generate unique random numbers within the range of deck_position
+    const randomPositions = generateUniqueRandomNumbers(0, 77, numCards);
+    //console.log(randomPositions);
+
+    // Retrieve cards corresponding to the random positions
+    const cards = await Card.find({ deck_position: { $in: randomPositions } });
+    console.log(cards);
+
+    // Create the reading in the database
+    const newReading = new Reading({
+      querentId: req.currentUserId,
       spreadType,
-      cardsInOrder,
-      aiInterpretation,
-      notes,
+      cardsInOrder: cards.map((card) => card._id),
     });
 
-    res.status(201).json(newReading);
+    await newReading.save();
+
+    res.status(201).json({ reading: newReading, cards });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Function to generate unique random numbers within a range
+function generateUniqueRandomNumbers(min, max, count) {
+  const numbers = new Set();
+  while (numbers.size < count) {
+    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+    numbers.add(randomNumber);
+  }
+  return Array.from(numbers);
+}
+
+// GET /api/readings/:readingId
+// Retrieve a specific reading by its ID
+router.post("/:readingId", isAuthenticated, async (req, res, next) => {
+  try {
+    const { readingId } = req.params;
+    const reading = await Reading.findById(readingId).populate("cardsInOrder");
+    if (!reading) {
+      return res.status(404).json({ message: "Reading not found" });
+    }
+    res.json(reading);
   } catch (error) {
     next(error);
   }
@@ -29,44 +76,29 @@ router.post("/", isAuthenticated, async (req, res, next) => {
 router.delete("/:readingId", isAuthenticated, async (req, res, next) => {
   try {
     const { readingId } = req.params;
-
-    // Find the reading by ID and delete it
     const deletedReading = await Reading.findByIdAndDelete(readingId);
-
     if (!deletedReading) {
       return res.status(404).json({ message: "Reading not found" });
     }
-
     res.json({ message: "Reading deleted successfully" });
   } catch (error) {
     next(error);
   }
 });
 
-// POST /api/readings/:readingId
+// POST /api/readings/:readingId/notes
 // Add or update notes to a reading by its ID
-router.post("/:readingId", isAuthenticated, async (req, res, next) => {
+router.post("/:readingId/notes", isAuthenticated, async (req, res, next) => {
   try {
     const { readingId } = req.params;
     const { notes } = req.body;
 
-    // Find the reading by ID
     const reading = await Reading.findById(readingId);
-
     if (!reading) {
       return res.status(404).json({ message: "Reading not found" });
     }
 
-    // Check if notes exist for the reading
-    if (reading.notes) {
-      // Update existing notes
-      reading.notes = notes;
-    } else {
-      // Create new notes
-      reading.notes = notes;
-    }
-
-    // Save the updated reading
+    reading.notes = notes;
     await reading.save();
 
     res.json(reading);
@@ -76,32 +108,20 @@ router.post("/:readingId", isAuthenticated, async (req, res, next) => {
 });
 
 // DELETE /api/readings/:readingId/notes
-// Delete the content of the notes associated with a reading by its reading ID
+// Delete notes associated with a reading by its ID
 router.delete("/:readingId/notes", isAuthenticated, async (req, res, next) => {
   try {
     const { readingId } = req.params;
 
-    // Find the reading by ID
     const reading = await Reading.findById(readingId);
-
     if (!reading) {
       return res.status(404).json({ message: "Reading not found" });
     }
 
-    // Check if notes exist for the reading
-    if (!reading.notes) {
-      return res
-        .status(404)
-        .json({ message: "No notes found for the reading" });
-    }
-
-    // Delete the content of the notes associated with the reading
     reading.notes = "";
-
-    // Save the updated reading
     await reading.save();
 
-    res.json({ message: "Note content deleted successfully" });
+    res.json({ message: "Notes deleted successfully" });
   } catch (error) {
     next(error);
   }
