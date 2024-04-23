@@ -98,7 +98,7 @@ router.post("/notes", isAuthenticated, async (req, res, next) => {
   }
 });
 
-router.delete("notes/:cardId", isAuthenticated, async (req, res, next) => {
+router.delete("/notes/:cardId", isAuthenticated, async (req, res, next) => {
   try {
     const { cardId } = req.params;
 

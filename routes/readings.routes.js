@@ -71,6 +71,17 @@ router.post("/:readingId", isAuthenticated, async (req, res, next) => {
   }
 });
 
+router.get("/", isAuthenticated, async (req, res, next) => {
+  try {
+    const readings = await Reading.find({
+      querentId: req.currentUserId,
+    }).populate("cardsInOrder");
+    res.json(readings);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // DELETE /api/readings/:readingId
 // Delete a reading by its ID
 router.delete("/:readingId", isAuthenticated, async (req, res, next) => {

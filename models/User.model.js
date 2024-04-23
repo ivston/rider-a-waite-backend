@@ -20,6 +20,7 @@ const userSchema = new Schema(
         card_id: {
           type: Schema.Types.ObjectId,
           required: false,
+          ref: "Card",
         },
         content: {
           type: String,
