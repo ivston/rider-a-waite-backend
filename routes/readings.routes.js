@@ -58,7 +58,7 @@ function generateUniqueRandomNumbers(min, max, count) {
 
 // GET /api/readings/:readingId
 // Retrieve a specific reading by its ID
-router.post("/:readingId", isAuthenticated, async (req, res, next) => {
+router.get("/:readingId", isAuthenticated, async (req, res, next) => {
   try {
     const { readingId } = req.params;
     const reading = await Reading.findById(readingId).populate("cardsInOrder");
