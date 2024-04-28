@@ -25,7 +25,6 @@ router.post("/:spreadType", isAuthenticated, async (req, res, next) => {
 
     // Generate unique random numbers within the range of deck_position
     const randomPositions = generateUniqueRandomNumbers(0, 77, numCards);
-    //console.log(randomPositions);
 
     // Retrieve cards corresponding to the random positions
     const cards = await Card.find({ deck_position: { $in: randomPositions } });
@@ -46,7 +45,7 @@ router.post("/:spreadType", isAuthenticated, async (req, res, next) => {
   }
 });
 
-// Function to generate unique random numbers within a range
+// Function to generate reading card positions
 function generateUniqueRandomNumbers(min, max, count) {
   const numbers = new Set();
   while (numbers.size < count) {
@@ -71,6 +70,7 @@ router.get("/:readingId", isAuthenticated, async (req, res, next) => {
   }
 });
 
+//GET all readings for a specific user
 router.get("/", isAuthenticated, async (req, res, next) => {
   try {
     const readings = await Reading.find({

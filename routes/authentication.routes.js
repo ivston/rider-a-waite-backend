@@ -5,12 +5,11 @@ const User = require("../models/User.model");
 const isAuthenticated = require("../middlewares/isAuthenticated");
 
 const SALT = 12;
-//! we are prefixed with /api/authentication
+//we're prefixed with /api/authentication
 
 router.post("/signup", async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    // const regex = new RegExp("^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{6,}$")
 
     const foundUser = await User.findOne({ email });
     // if we find someone, warn the user that the email is alrady used
@@ -47,8 +46,6 @@ router.post("/login", async (req, res, next) => {
     if (!correctPassword) {
       return res.status(400).json({ message: "Wrong password" });
     }
-
-    // Reasonably assume that they are the correct person
 
     const token = jwt.sign({ id: foundUser._id }, process.env.TOKEN_SECRET, {
       algorithm: "HS256",
